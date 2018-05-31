@@ -12,10 +12,10 @@ from keras.preprocessing import image
 from keras.callbacks import ReduceLROnPlateau
 from keras.layers import BatchNormalization
 from sklearn.model_selection import train_test_split
-
+from keras import regularizers
 DEBUG = False
-RETRAIN = False
-output_name = 'relu3layer.h5'
+RETRAIN = True
+output_name = 'Bottleneck.h5'
 
 train = pd.read_csv('data/train.csv')
 test = pd.read_csv('data/test.csv')
@@ -70,9 +70,11 @@ model = Sequential()
 #Adding the layers
 #Dense = fully connected
 model.add(Flatten(input_shape=(28,28,1)))
-model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu',kernel_regularizer=regularizers.l2(.01)))
 model.add(BatchNormalization())
+model.add(Dense(20, activation='relu'))
 model.add(Dense(50, activation='relu'))
+model.add(Dense(20, activation='relu'))
 model.add(BatchNormalization())
 model.add(Dense(10, activation='softmax'))
 
@@ -92,18 +94,10 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                               patience=5, min_lr=0.001)
 
 # Fitting the model
-history = model.fit_generator(batches, steps_per_epoch=batches.n, epochs=1, validation_data=val_batches,
+history = model.fit_generator(batches, steps_per_epoch=batches.n, epochs=5, validation_data=val_batches,
                               validation_steps=val_batches.n, callbacks=[reduce_lr], verbose=1)
 
 # Saving the model
 model.save('models/'+output_name, overwrite=True)
-
-#This part is mostly because the Keras loading bar is broken in PyCharm so I can't easily see these values
-results = history.history
-print "Training loss: ", results['loss']
-print "Training accuracy: ", results['acc']
-print "Validation loss: ", results['val_loss']
-print "Validation accuracy: ", results['val_acc']
-
 
 predict(model, X_test)
