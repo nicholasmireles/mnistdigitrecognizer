@@ -1,3 +1,4 @@
+import sys
 import os
 import datetime
 import numpy as np  # linear algebra
@@ -50,7 +51,7 @@ np.random.seed(seed)
 def predict(trained_model, test_set):
     predictions = trained_model.predict_classes(test_set)
     timestamp=datetime.datetime.now().strftime("%Y%m%dT%H%M")
-    with open('predictions_'+timestamp+'.csv', 'w') as oFile:
+    with open('predictions/'+timestamp+'.csv', 'w') as oFile:
         oFile.write("ImageId,Label\n")
         i = 1
         for p in predictions:
@@ -61,23 +62,27 @@ def predict(trained_model, test_set):
 if not RETRAIN and os.path.isfile('models/'+output_name):
     model = load_model('models/'+output_name)
     predict(model, X_test)
-    exit()
+    sys.exit()
 
 # Creating the new model
 model = Sequential()
+
+#Adding the layers
+#Dense = fully connected
 model.add(Flatten(input_shape=(28,28,1)))
-# Dense = fully connected
 model.add(Dense(100, activation='relu'))
 model.add(BatchNormalization())
 model.add(Dense(50, activation='relu'))
 model.add(BatchNormalization())
 model.add(Dense(10, activation='softmax'))
+
 # categorical_crossentropy = log-loss
 model.compile(optimizer=RMSprop(lr=.001), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Create a generator to pass the data to the model
 gen = image.ImageDataGenerator()
 
+# Creating the train/validation splits
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.10, random_state=42)
 batches = gen.flow(X_train, y_train, batch_size=64)
 val_batches = gen.flow(X_val, y_val, batch_size=64)
@@ -89,8 +94,11 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
 # Fitting the model
 history = model.fit_generator(batches, steps_per_epoch=batches.n, epochs=1, validation_data=val_batches,
                               validation_steps=val_batches.n, callbacks=[reduce_lr], verbose=1)
+
+# Saving the model
 model.save('models/'+output_name, overwrite=True)
 
+#This part is mostly because the Keras loading bar is broken in PyCharm so I can't easily see these values
 results = history.history
 print "Training loss: ", results['loss']
 print "Training accuracy: ", results['acc']
