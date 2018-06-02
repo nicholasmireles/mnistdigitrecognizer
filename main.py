@@ -5,17 +5,18 @@ import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
 
 from keras.models import Sequential, load_model
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten,Dropout
 from keras.optimizers import RMSprop
 from keras.utils.np_utils import to_categorical
 from keras.preprocessing import image
-from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import ReduceLROnPlateau,TensorBoard
 from keras.layers import BatchNormalization
 from sklearn.model_selection import train_test_split
 from keras import regularizers
+
 DEBUG = False
 RETRAIN = True
-output_name = 'Bottleneck.h5'
+output_name = 'BottleneckDropout.h5'
 
 train = pd.read_csv('data/train.csv')
 test = pd.read_csv('data/test.csv')
@@ -72,10 +73,12 @@ model = Sequential()
 model.add(Flatten(input_shape=(28,28,1)))
 model.add(Dense(100, activation='relu',kernel_regularizer=regularizers.l2(.01)))
 model.add(BatchNormalization())
-model.add(Dense(20, activation='relu'))
-model.add(Dense(50, activation='relu'))
-model.add(Dense(20, activation='relu'))
+model.add(Dense(20, activation='relu',kernel_regularizer=regularizers.l2(.01)))
 model.add(BatchNormalization())
+model.add(Dense(50, activation='relu',kernel_regularizer=regularizers.l2(.01)))
+model.add(Dropout(.5))
+model.add(BatchNormalization())
+model.add(Dense(20, activation='relu',kernel_regularizer=regularizers.l2(.01)))
 model.add(Dense(10, activation='softmax'))
 
 # categorical_crossentropy = log-loss
@@ -93,9 +96,13 @@ val_batches = gen.flow(X_val, y_val, batch_size=64)
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                               patience=5, min_lr=0.001)
 
+# Creating a callback for tensorboard to visualize the training process
+tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=64,
+                          write_graph=True, write_grads=True, write_images=True, embeddings_freq=0,
+                          embeddings_layer_names=None, embeddings_metadata=None)
 # Fitting the model
-history = model.fit_generator(batches, steps_per_epoch=batches.n, epochs=5, validation_data=val_batches,
-                              validation_steps=val_batches.n, callbacks=[reduce_lr], verbose=1)
+history = model.fit_generator(batches, steps_per_epoch=batches.n, epochs=50, validation_data=val_batches,
+                              validation_steps=val_batches.n, callbacks=[reduce_lr,tensorboard], verbose=1)
 
 # Saving the model
 model.save('models/'+output_name, overwrite=True)
