@@ -7,11 +7,16 @@ Everything is hard-coded. This is elegant.
 
 
 ### Current Accuracy
-Validation: I forgot
+Validation: .9917
 
-Test: .971
+Test: .9986
 
 ### Changelog
+###### 6/13/2018
+- Created a CNN model based on a tutorial by Magnus Pederson (https://www.youtube.com/watch?v=HMcx-zY8JSg)
+- Removed the image generator as it reduced performance and speed drastically
+- Started a notes file to better track what I learn
+
 ###### 5/30/2018
 - Changed the activation functions to relu
 - Added batch normalization between the layers
