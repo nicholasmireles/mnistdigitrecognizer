@@ -21,3 +21,6 @@
     - Works up to a point (128) then performance begins to decrease
 - Standardizing data by dividing by max value
     - Worse performance. Maxes out ~.98
+- Supplementing data with augmentations
+    - Overfit very quickly
+    - Worth noting that I doubled the test set by randomly rotating the digits between 1 and 90 degrees
