@@ -24,3 +24,7 @@
 - Supplementing data with augmentations
     - Overfit very quickly
     - Worth noting that I doubled the test set by randomly rotating the digits between 1 and 90 degrees
+    - Using a range of 1-15 dramatically improved validation accuration over 1-90.
+    - 1-10 even better
+    - 1-5 better still
+    - Testing accuracy was not any better
